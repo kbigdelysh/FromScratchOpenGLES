@@ -28,6 +28,7 @@ public class Cube {
             "precision mediump float;" +
                     "uniform vec4 vColor;" +
                     "void main() {" +
+                    //"  gl_FragColor = vColor;" +
                     "  gl_FragColor = vColor;" +
                     "}";
 
@@ -71,12 +72,14 @@ public class Cube {
                     1.0f, 1.0f, -1.0f,
 
                     // Back face
-                    1.0f, 1.0f, -1.0f,
-                    1.0f, -1.0f, -1.0f,
-                    -1.0f, 1.0f, -1.0f,
-                    1.0f, -1.0f, -1.0f,
-                    -1.0f, -1.0f, -1.0f,
-                    -1.0f, 1.0f, -1.0f,
+                    1.0f, 1.0f, -1.0f,    // right-top    corner
+                    1.0f, -1.0f, -1.0f,   // right-bottom corner
+                    -1.0f, 1.0f, -1.0f,   // left-top     corner
+                    1.0f, -1.0f, -1.0f,   // right-bottom corner
+                    -1.0f, -1.0f, -1.0f,  // left-bottom  corner
+                    -1.0f, 1.0f, -1.0f,   // left-top     corner
+                    1.0f, 1.0f, -1.0f,    // right-top    corner // added to draw missing line
+                    -1.0f, 1.0f, -1.0f,   // left-top     corner // added to draw missing line
 
                     // Left face
                     -1.0f, 1.0f, -1.0f,
@@ -127,7 +130,7 @@ public class Cube {
 
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
-    float color[] = { 0.2f, 0.709803922f, 0.898039216f, 1.0f };
+    float color[] = { 0.2f, 0.709803922f, 0.898039216f, 0.5f };
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
@@ -206,7 +209,9 @@ public class Cube {
 //                GLES20.GL_TRIANGLES, drawOrder.length,
 //                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
         // Draw the cube.
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
+        GLES20.glLineWidth(8);
+        GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, 38); //36 vertexes, 6 vertex for each side
+        //GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, and GL_TRIANGLES are accepted.
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
