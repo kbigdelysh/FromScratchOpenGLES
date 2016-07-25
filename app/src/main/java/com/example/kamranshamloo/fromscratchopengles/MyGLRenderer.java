@@ -29,7 +29,18 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
     private final float[] mViewMatrix = new float[16];
     private final float[] mRotationMatrix = new float[16];
 
+    /** A temporary matrix. */
+    private float[] mTemporaryMatrix = new float[16];
+
+    /** Store the accumulated rotation. */
+    private final float[] mAccumulatedRotation = new float[16];
+
+    /** Store the current rotation. */
+    private final float[] mCurrentRotation = new float[16];
+
     private volatile float mAngle;
+    public volatile float mDeltaX;
+    public volatile float mDeltaY;
 
 
 
@@ -39,6 +50,9 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         // TODO: mTriangle = new Triangle();
         mSquare   = new Square();
+
+        // Initialize the accumulated rotation matrix
+        Matrix.setIdentityM(mAccumulatedRotation, 0);
     }
 
     @Override
@@ -82,11 +96,20 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         // float angle = 0.090f * ((int) time);
 
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+        // Set a matrix that contains the current rotation.
+        Matrix.setIdentityM(mCurrentRotation, 0);
+        Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
+        Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);
+        mDeltaX = 0.0f;
+        mDeltaY = 0.0f;
+        // Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result.
+        Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
+        System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
 
         // Combine the rotation matrix with the projection and camera view
         // Note that the mMVPMatrix factor *must be first* in order
         // for the matrix multiplication product to be correct.
-        Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
+        Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mAccumulatedRotation, 0);
 
         mSquare.draw(scratch);
 
