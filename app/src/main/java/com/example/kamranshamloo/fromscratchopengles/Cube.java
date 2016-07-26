@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+
+import android.opengl.GLES10;
 import android.opengl.GLES20;
 
 /**
@@ -46,6 +48,50 @@ public class Cube {
 //            -0.5f, -0.5f, 0.0f,   // bottom left
 //            0.5f, -0.5f, 0.0f,   // bottom right
 //            0.5f,  0.5f, 0.0f }; // top right
+    //---------------------------
+final float[] cubeLineSegmentsPositionData =
+        {
+                // Front face
+                1.0f, 1.0f, 1.0f,    // right-top    corner
+                1.0f, -1.0f, 1.0f,   // right-bottom corner
+
+                1.0f, -1.0f, 1.0f,   // right-bottom corner
+                -1.0f, -1.0f, 1.0f,  // left-bottom  corner
+
+                -1.0f, -1.0f, 1.0f,  // left-bottom  corner
+                -1.0f, 1.0f, 1.0f,   // left-top     corner
+
+                -1.0f, 1.0f, 1.0f,   // left-top     corner
+                1.0f, 1.0f, 1.0f,    // right-top    corner
+
+                // Back face
+                1.0f, 1.0f, -1.0f,    // right-top    corner
+                1.0f, -1.0f, -1.0f,   // right-bottom corner
+
+                1.0f, -1.0f, -1.0f,   // right-bottom corner
+                -1.0f, -1.0f, -1.0f,  // left-bottom  corner
+
+                -1.0f, -1.0f, -1.0f,  // left-bottom  corner
+                -1.0f, 1.0f, -1.0f,   // left-top     corner
+
+                -1.0f, 1.0f, -1.0f,   // left-top     corner
+                1.0f, 1.0f, -1.0f,    // right-top    corner
+
+                // Right face
+                1.0f, 1.0f, -1.0f,    // top-far      corner
+                1.0f, 1.0f, 1.0f,     // top-close    corner
+
+                1.0f, -1.0f, -1.0f,   // bottom-far   corner
+                1.0f, -1.0f, 1.0f,    // bottom-close corner
+
+                // Left face
+                -1.0f, 1.0f, -1.0f,    // top-far      corner
+                -1.0f, 1.0f, 1.0f,     // top-close    corner
+
+                -1.0f, -1.0f, -1.0f,   // bottom-far   corner
+                -1.0f, -1.0f, 1.0f,    // bottom-close corner
+        };
+
     //------------------------------------
 
     final float[] cubePositionData =
@@ -139,10 +185,10 @@ public class Cube {
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
-                cubePositionData.length * 4);
+                cubeLineSegmentsPositionData.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(cubePositionData);
+        vertexBuffer.put(cubeLineSegmentsPositionData);
         vertexBuffer.position(0);
 
         // initialize byte buffer for the draw list
@@ -209,8 +255,10 @@ public class Cube {
 //                GLES20.GL_TRIANGLES, drawOrder.length,
 //                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
         // Draw the cube.
-        GLES20.glLineWidth(8);
-        GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, 38); //36 vertexes, 6 vertex for each side
+
+        GLES20.glLineWidth(8); // Make the edges thicker
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, cubeLineSegmentsPositionData.length/3); //36 vertexes, 6 vertex for each side
+        //GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, cubePositionData.length/3); //36 vertexes, 6 vertex for each side
         //GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, and GL_TRIANGLES are accepted.
 
         // Disable vertex array
