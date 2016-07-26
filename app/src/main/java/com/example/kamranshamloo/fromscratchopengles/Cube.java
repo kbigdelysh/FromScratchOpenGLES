@@ -7,6 +7,7 @@ import java.nio.ShortBuffer;
 
 import android.opengl.GLES10;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 /**
  * A two-dimensional square for use as a drawn object in OpenGL ES 2.0.
@@ -200,7 +201,7 @@ final float[] cubeLineSegmentsPositionData =
      * @param mvpMatrix - The Model View Project matrix in which to draw
      * this shape.
      */
-    public void draw(float[] mvpMatrix) {
+    public void draw(final float[] mvpMatrix, final float[] globalRotationMatrix) {
         // Add program to OpenGL environment
         GLES20.glUseProgram(mProgram);
 
@@ -226,8 +227,10 @@ final float[] cubeLineSegmentsPositionData =
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         MyGLRenderer.checkGlError("glGetUniformLocation");
 
+        float[] scratch = new float[16];
+        Matrix.multiplyMM(scratch, 0, mvpMatrix, 0, globalRotationMatrix, 0);
         // Apply the projection and view transformation
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, scratch, 0);
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
         // Draw the square

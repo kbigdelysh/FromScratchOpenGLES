@@ -37,7 +37,7 @@ public class Puck {
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
     private final int mProgram;
-    private final float mScaleFactor;
+    private final float mScaleFactor = 0.05f;
     private int mPositionHandle;
     private int mColorHandle;
     private int mMVPMatrixHandle;
@@ -95,6 +95,10 @@ public class Puck {
     float color[] = { 1.0f, 0.509803922f, 0.698039216f, 0.5f };
     private float[] mCurrentTranslation = new float[16];
 
+    private float mX = 0;
+    private float mY = 0;
+    private float mZ = 0;
+
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
      */
@@ -105,7 +109,7 @@ public class Puck {
                 cubeLineSegmentsPositionData.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        mScaleFactor = 0.05f;
+        //mScaleFactor = 0.5f;
         for (int i = 0; i < cubeLineSegmentsPositionData.length; i++) {
             cubeLineSegmentsPositionData[i] = cubeLineSegmentsPositionData[i] * mScaleFactor;
         }
@@ -143,14 +147,19 @@ public class Puck {
      * @param mvpMatrix - The Model View Project matrix in which to draw
      * this shape.
      */
-    public void draw(final float[] mvpMatrix) {
+    public void draw(final float[] mvpMatrix, final float[] globalRotationMatrix) {
+
+        // The proper order for matrix multiplication is :
+        // projection * view * globalRotation * translation * model(shape).
 
         // Translation
         Matrix.setIdentityM(mCurrentTranslation, 0);
-        Matrix.translateM(mCurrentTranslation,0, 1.0f, 0.0f, 0.0f);
-        float[] translatedMVPMatrix = new float[16];
-        Matrix.setIdentityM(translatedMVPMatrix, 0);
-        Matrix.multiplyMM(translatedMVPMatrix,0,mCurrentTranslation, 0, mvpMatrix, 0);
+        Matrix.translateM(mCurrentTranslation,0, mX, mY, mZ);
+        float[] rotatedTranslatedMVPMatrix = new float[16];
+        Matrix.setIdentityM(rotatedTranslatedMVPMatrix, 0);
+        Matrix.multiplyMM(rotatedTranslatedMVPMatrix,0,globalRotationMatrix , 0, mCurrentTranslation, 0);
+        float[] scratch = new float[16];
+        Matrix.multiplyMM(scratch, 0, mvpMatrix, 0, rotatedTranslatedMVPMatrix, 0);
 
         // Add program to OpenGL environment
         GLES20.glUseProgram(mProgram);
@@ -178,7 +187,7 @@ public class Puck {
         MyGLRenderer.checkGlError("glGetUniformLocation");
 
         // Apply the projection and view transformation
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, translatedMVPMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, scratch, 0);
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
         // Draw the square
@@ -196,4 +205,27 @@ public class Puck {
         GLES20.glDisableVertexAttribArray(mPositionHandle);
     }
 
+    public float getmZ() {
+        return mZ;
+    }
+
+    public void setmZ(float mZ) {
+        this.mZ = mZ;
+    }
+
+    public float getmY() {
+        return mY;
+    }
+
+    public void setmY(float mY) {
+        this.mY = mY;
+    }
+
+    public float getmX() {
+        return mX;
+    }
+
+    public void setmX(float mX) {
+        this.mX = mX;
+    }
 }

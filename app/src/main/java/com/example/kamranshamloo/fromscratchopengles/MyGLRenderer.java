@@ -51,7 +51,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        // TODO: mTriangle = new Triangle();
+
         mSquare   = new Square();
         mCube     = new Cube();
         mPuck     = new Puck();
@@ -101,6 +101,8 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         // float angle = 0.090f * ((int) time);
 
         //Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+
+        // Create global rotation matrix "mAccumulatedRotation"
         // Set a matrix that contains the current rotation.
         Matrix.setIdentityM(mCurrentRotation, 0);
         Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
@@ -111,20 +113,10 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
         System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
 
-        // Combine the rotation matrix with the projection and camera view
-        // Note that the mMVPMatrix factor *must be first* in order
-        // for the matrix multiplication product to be correct.
-        Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mAccumulatedRotation, 0);
-
-
-
         //mSquare.draw(scratch);
-        mCube.draw(scratch);
-        mPuck.draw(scratch);
+        mCube.draw(mMVPMatrix, mAccumulatedRotation);
+        mPuck.draw(mMVPMatrix, mAccumulatedRotation);
 
-
-        // TODO: you may want to write code for triangle
-        // mTriangle.draw(scratch);
     }
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
