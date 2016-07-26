@@ -1,16 +1,18 @@
 package com.example.kamranshamloo.fromscratchopengles;
 
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+
+import android.opengl.GLES10;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 /**
- * A two-dimensional square for use as a drawn object in OpenGL ES 2.0.
+ * Represents a stationary or mobile M2P device.
  */
-public class Square {
+public class Puck {
 
     private final String vertexShaderCode =
             // This matrix member variable provides a hook to manipulate
@@ -28,41 +30,86 @@ public class Square {
             "precision mediump float;" +
                     "uniform vec4 vColor;" +
                     "void main() {" +
+                    //"  gl_FragColor = vColor;" +
                     "  gl_FragColor = vColor;" +
                     "}";
 
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
     private final int mProgram;
+    private final float mScaleFactor;
     private int mPositionHandle;
     private int mColorHandle;
     private int mMVPMatrixHandle;
 
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
-    static float squareCoords[] = {
-            -0.5f,  0.5f, 0.0f,   // top left
-            -0.5f, -0.5f, 0.0f,   // bottom left
-            0.5f, -0.5f, 0.0f,   // bottom right
-            0.5f,  0.5f, 0.0f }; // top right
+
+    final float[] cubeLineSegmentsPositionData =
+            {
+                    // Front face
+                    1.0f, 1.0f, 1.0f,    // right-top    corner
+                    1.0f, -1.0f, 1.0f,   // right-bottom corner
+
+                    1.0f, -1.0f, 1.0f,   // right-bottom corner
+                    -1.0f, -1.0f, 1.0f,  // left-bottom  corner
+
+                    -1.0f, -1.0f, 1.0f,  // left-bottom  corner
+                    -1.0f, 1.0f, 1.0f,   // left-top     corner
+
+                    -1.0f, 1.0f, 1.0f,   // left-top     corner
+                    1.0f, 1.0f, 1.0f,    // right-top    corner
+
+                    // Back face
+                    1.0f, 1.0f, -1.0f,    // right-top    corner
+                    1.0f, -1.0f, -1.0f,   // right-bottom corner
+
+                    1.0f, -1.0f, -1.0f,   // right-bottom corner
+                    -1.0f, -1.0f, -1.0f,  // left-bottom  corner
+
+                    -1.0f, -1.0f, -1.0f,  // left-bottom  corner
+                    -1.0f, 1.0f, -1.0f,   // left-top     corner
+
+                    -1.0f, 1.0f, -1.0f,   // left-top     corner
+                    1.0f, 1.0f, -1.0f,    // right-top    corner
+
+                    // Right face
+                    1.0f, 1.0f, -1.0f,    // top-far      corner
+                    1.0f, 1.0f, 1.0f,     // top-close    corner
+
+                    1.0f, -1.0f, -1.0f,   // bottom-far   corner
+                    1.0f, -1.0f, 1.0f,    // bottom-close corner
+
+                    // Left face
+                    -1.0f, 1.0f, -1.0f,    // top-far      corner
+                    -1.0f, 1.0f, 1.0f,     // top-close    corner
+
+                    -1.0f, -1.0f, -1.0f,   // bottom-far   corner
+                    -1.0f, -1.0f, 1.0f,    // bottom-close corner
+            };
 
     private final short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
 
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
-    float color[] = { 0.2f, 0.709803922f, 0.898039216f, 1.0f };
+    float color[] = { 1.0f, 0.509803922f, 0.698039216f, 0.5f };
+    private float[] mCurrentTranslation = new float[16];
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
      */
-    public Square() {
+    public Puck() {
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
-                squareCoords.length * 4);
+                cubeLineSegmentsPositionData.length * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(squareCoords);
+        mScaleFactor = 0.05f;
+        for (int i = 0; i < cubeLineSegmentsPositionData.length; i++) {
+            cubeLineSegmentsPositionData[i] = cubeLineSegmentsPositionData[i] * mScaleFactor;
+        }
+        vertexBuffer.put(cubeLineSegmentsPositionData);
         vertexBuffer.position(0);
 
         // initialize byte buffer for the draw list
@@ -86,6 +133,8 @@ public class Square {
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
         GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
         GLES20.glLinkProgram(mProgram);                  // create OpenGL program executables
+
+        Matrix.setIdentityM(mCurrentTranslation, 0);
     }
 
     /**
@@ -94,7 +143,15 @@ public class Square {
      * @param mvpMatrix - The Model View Project matrix in which to draw
      * this shape.
      */
-    public void draw(float[] mvpMatrix) {
+    public void draw(final float[] mvpMatrix) {
+
+        // Translation
+        Matrix.setIdentityM(mCurrentTranslation, 0);
+        Matrix.translateM(mCurrentTranslation,0, 1.0f, 0.0f, 0.0f);
+        float[] translatedMVPMatrix = new float[16];
+        Matrix.setIdentityM(translatedMVPMatrix, 0);
+        Matrix.multiplyMM(translatedMVPMatrix,0,mCurrentTranslation, 0, mvpMatrix, 0);
+
         // Add program to OpenGL environment
         GLES20.glUseProgram(mProgram);
 
@@ -104,7 +161,7 @@ public class Square {
         // Enable a handle to the triangle vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
-        // Prepare the Square coordinate data
+        // Prepare the cubiod coordinate data
         GLES20.glVertexAttribPointer(
                 mPositionHandle, COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
@@ -121,13 +178,19 @@ public class Square {
         MyGLRenderer.checkGlError("glGetUniformLocation");
 
         // Apply the projection and view transformation
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, translatedMVPMatrix, 0);
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
         // Draw the square
-        GLES20.glDrawElements(
-                GLES20.GL_TRIANGLES, drawOrder.length,
-                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+//        GLES20.glDrawElements(
+//                GLES20.GL_TRIANGLES, drawOrder.length,
+//                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+        // Draw the cube.
+
+        GLES20.glLineWidth(4); // Make the edges thicker
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, cubeLineSegmentsPositionData.length/3); //36 vertexes, 6 vertex for each side
+        //GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, cubePositionData.length/3); //36 vertexes, 6 vertex for each side
+        //GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, and GL_TRIANGLES are accepted.
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);

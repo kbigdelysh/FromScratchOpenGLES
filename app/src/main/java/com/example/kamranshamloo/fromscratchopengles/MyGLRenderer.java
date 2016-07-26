@@ -23,6 +23,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
     //private Triangle mTriangle;
     private Square   mSquare;
     private Cube     mCube;
+    private Puck     mPuck;
 
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
@@ -38,6 +39,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
 
     /** Store the current rotation. */
     private final float[] mCurrentRotation = new float[16];
+    private final float[] mCurrentTranslation= new float[16];
 
     private volatile float mAngle;
     public volatile float mDeltaX;
@@ -51,7 +53,8 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         // TODO: mTriangle = new Triangle();
         mSquare   = new Square();
-        mCube = new Cube();
+        mCube     = new Cube();
+        mPuck     = new Puck();
 
         // Initialize the accumulated rotation matrix
         Matrix.setIdentityM(mAccumulatedRotation, 0);
@@ -97,7 +100,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         // long time = SystemClock.uptimeMillis() % 4000L;
         // float angle = 0.090f * ((int) time);
 
-        Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+        //Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
         // Set a matrix that contains the current rotation.
         Matrix.setIdentityM(mCurrentRotation, 0);
         Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
@@ -113,8 +116,12 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         // for the matrix multiplication product to be correct.
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mAccumulatedRotation, 0);
 
+
+
         //mSquare.draw(scratch);
         mCube.draw(scratch);
+        mPuck.draw(scratch);
+
 
         // TODO: you may want to write code for triangle
         // mTriangle.draw(scratch);

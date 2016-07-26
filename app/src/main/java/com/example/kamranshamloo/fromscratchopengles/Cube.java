@@ -1,6 +1,5 @@
 package com.example.kamranshamloo.fromscratchopengles;
 
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -151,26 +150,7 @@ final float[] cubeLineSegmentsPositionData =
                     -1.0f, -1.0f, 1.0f,
                     -1.0f, -1.0f, -1.0f,
             };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     //---------------------------------------------
-
 
     private final short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
 
