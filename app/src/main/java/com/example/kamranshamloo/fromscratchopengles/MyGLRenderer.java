@@ -42,13 +42,15 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
 
     /** Store the current rotation. */
     private final float[] mCurrentRotation = new float[16];
-    private final float[] mCurrentTranslation= new float[16];
+    private final float[] mCurrentTranslation = new float[16];
 
-    private volatile float mAngle;
-    public volatile float mDeltaX;
-    public volatile float mDeltaY;
+    private volatile float mAngle = 0.0f;
 
 
+
+    private volatile float mAngleAroundZ = 0.0f;
+    public volatile float mDeltaX = 0.0f;
+    public volatile float mDeltaY = 0.0f;
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
@@ -57,10 +59,14 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
 
         mSquare   = new Square();
         mCube     = new Cube(); // This is the room
-        mPucks = new ArrayList<Puck>(); // listof live M2P pucks.
+        mPucks    = new ArrayList<>(); // list of live M2P pucks.
 
         // Depending on how many pucks are live, set up the list of pucks to be rendered.
         mPucks.add(new Puck());
+        mPucks.add(new Puck(2, 1, 1));
+        mPucks.add(new Puck(2, 1, -1));
+        mPucks.add(new Puck(-2, 1, 1));
+        mPucks.add(new Puck(-2, 1, -1));
 
         // Initialize the accumulated rotation matrix
         Matrix.setIdentityM(mAccumulatedRotation, 0);
@@ -77,7 +83,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         // Position the eye in front of the origin.
         final float eyeX = 0.0f;
         final float eyeY = 0.0f;
-        final float eyeZ = 3.0f;
+        final float eyeZ = 4.0f;
 
         // We are looking toward the distance
         final float lookX = 0.0f;
@@ -117,8 +123,10 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         Matrix.setIdentityM(mCurrentRotation, 0);
         Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
         Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);
+        Matrix.rotateM(mCurrentRotation, 0, mAngleAroundZ, 0.0f, 0.0f, 1.0f);
         mDeltaX = 0.0f;
         mDeltaY = 0.0f;
+        mAngleAroundZ = 0.0f;
         // Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result.
         Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
         System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
@@ -201,4 +209,11 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         Matrix.setIdentityM(mAccumulatedRotation, 0);
     }
 
+    public float getAngleAroundZ() {
+        return mAngleAroundZ;
+    }
+
+    public void setAngleAroundZ(float angleAroundZ) {
+        this.mAngleAroundZ = angleAroundZ;
+    }
 }

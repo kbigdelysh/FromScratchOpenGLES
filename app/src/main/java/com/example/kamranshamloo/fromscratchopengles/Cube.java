@@ -1,13 +1,11 @@
 package com.example.kamranshamloo.fromscratchopengles;
 
+import android.opengl.GLES20;
+import android.opengl.Matrix;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
-import android.opengl.GLES10;
-import android.opengl.GLES20;
-import android.opengl.Matrix;
 
 /**
  * A two-dimensional square for use as a drawn object in OpenGL ES 2.0.
@@ -52,44 +50,44 @@ public class Cube {
 final float[] cubeLineSegmentsPositionData =
         {
                 // Front face
-                1.0f, 1.0f, 1.0f,    // right-top    corner
-                1.0f, -1.0f, 1.0f,   // right-bottom corner
+                2.0f, 1.0f, 1.0f,    // right-top    corner
+                2.0f, -1.0f, 1.0f,   // right-bottom corner
 
-                1.0f, -1.0f, 1.0f,   // right-bottom corner
-                -1.0f, -1.0f, 1.0f,  // left-bottom  corner
+                2.0f, -1.0f, 1.0f,   // right-bottom corner
+                -2.0f, -1.0f, 1.0f,  // left-bottom  corner
 
-                -1.0f, -1.0f, 1.0f,  // left-bottom  corner
-                -1.0f, 1.0f, 1.0f,   // left-top     corner
+                -2.0f, -1.0f, 1.0f,  // left-bottom  corner
+                -2.0f, 1.0f, 1.0f,   // left-top     corner
 
-                -1.0f, 1.0f, 1.0f,   // left-top     corner
-                1.0f, 1.0f, 1.0f,    // right-top    corner
+                -2.0f, 1.0f, 1.0f,   // left-top     corner
+                2.0f, 1.0f, 1.0f,    // right-top    corner
 
                 // Back face
-                1.0f, 1.0f, -1.0f,    // right-top    corner
-                1.0f, -1.0f, -1.0f,   // right-bottom corner
+                2.0f, 1.0f, -1.0f,    // right-top    corner
+                2.0f, -1.0f, -1.0f,   // right-bottom corner
 
-                1.0f, -1.0f, -1.0f,   // right-bottom corner
-                -1.0f, -1.0f, -1.0f,  // left-bottom  corner
+                2.0f, -1.0f, -1.0f,   // right-bottom corner
+                -2.0f, -1.0f, -1.0f,  // left-bottom  corner
 
-                -1.0f, -1.0f, -1.0f,  // left-bottom  corner
-                -1.0f, 1.0f, -1.0f,   // left-top     corner
+                -2.0f, -1.0f, -1.0f,  // left-bottom  corner
+                -2.0f, 1.0f, -1.0f,   // left-top     corner
 
-                -1.0f, 1.0f, -1.0f,   // left-top     corner
-                1.0f, 1.0f, -1.0f,    // right-top    corner
+                -2.0f, 1.0f, -1.0f,   // left-top     corner
+                2.0f, 1.0f, -1.0f,    // right-top    corner
 
                 // Right face
-                1.0f, 1.0f, -1.0f,    // top-far      corner
-                1.0f, 1.0f, 1.0f,     // top-close    corner
+                2.0f, 1.0f, -1.0f,    // top-far      corner
+                2.0f, 1.0f, 1.0f,     // top-close    corner
 
-                1.0f, -1.0f, -1.0f,   // bottom-far   corner
-                1.0f, -1.0f, 1.0f,    // bottom-close corner
+                2.0f, -1.0f, -1.0f,   // bottom-far   corner
+                2.0f, -1.0f, 1.0f,    // bottom-close corner
 
                 // Left face
-                -1.0f, 1.0f, -1.0f,    // top-far      corner
-                -1.0f, 1.0f, 1.0f,     // top-close    corner
+                -2.0f, 1.0f, -1.0f,    // top-far      corner
+                -2.0f, 1.0f, 1.0f,     // top-close    corner
 
-                -1.0f, -1.0f, -1.0f,   // bottom-far   corner
-                -1.0f, -1.0f, 1.0f,    // bottom-close corner
+                -2.0f, -1.0f, -1.0f,   // bottom-far   corner
+                -2.0f, -1.0f, 1.0f,    // bottom-close corner
         };
 
     //------------------------------------

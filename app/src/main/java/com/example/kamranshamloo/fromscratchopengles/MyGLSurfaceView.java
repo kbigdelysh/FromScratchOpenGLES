@@ -9,12 +9,13 @@ import android.view.MotionEvent;
 /**
  * Created by kamran.shamloo on 2016-07-21.
  */
-public class MyGLSurfaceView extends GLSurfaceView{
+public class MyGLSurfaceView extends GLSurfaceView implements RotationGestureDetector.OnRotationGestureListener{
     private final MyGLRenderer mRenderer;
     private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
     private float mDensity;
     private float mPreviousX;
     private float mPreviousY;
+    private RotationGestureDetector mRotationDetector;
 
 
     public MyGLSurfaceView(Context context){
@@ -34,10 +35,14 @@ public class MyGLSurfaceView extends GLSurfaceView{
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         //setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
+        mRotationDetector = new RotationGestureDetector(this);
+
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
+        mRotationDetector.onTouchEvent(motionEvent);
+
         // MotionEvent reports input details from the touch screen
         // and other input controls. In this case, you are only
         // interested in events where the touch position changed.
@@ -47,17 +52,17 @@ public class MyGLSurfaceView extends GLSurfaceView{
 
 
         switch (motionEvent.getAction()) {
-            case MotionEvent.ACTION_MOVE:
 
-                float deltaX = (x - mPreviousX) / mDensity / 2f;
-                float deltaY = (y - mPreviousY) / mDensity / 2f;
+            case MotionEvent.ACTION_MOVE: {
+                if (!mRotationDetector.isInProgress()) {
+                    float deltaX = (x - mPreviousX) / mDensity / 2f;
+                    float deltaY = (y - mPreviousY) / mDensity / 2f;
 
-                mRenderer.mDeltaX += deltaX;
-                mRenderer.mDeltaY += deltaY;
-                mRenderer.setAngle(mRenderer.getAngle() +(deltaX + deltaY));
-                requestRender();
-
-
+                    mRenderer.mDeltaX += deltaX;
+                    mRenderer.mDeltaY += deltaY;
+                    //mRenderer.setAngle(mRenderer.getAngle() + (deltaX + deltaY));
+                    requestRender();
+                }
 
                 // reverse direction of rotation above the mid-line
 //                if (y > getHeight()/ 2){
@@ -72,6 +77,7 @@ public class MyGLSurfaceView extends GLSurfaceView{
 //                        mRenderer.getAngle() +
 //                                ((dx + dy) * TOUCH_SCALE_FACTOR));
 //                requestRender();
+            }
         }
 
         mPreviousX = x;
@@ -84,5 +90,11 @@ public class MyGLSurfaceView extends GLSurfaceView{
 //            return super.onTouchEvent(motionEvent);
 //        }
 
+    }
+
+    @Override
+    public void OnRotation(RotationGestureDetector rotationDetector) {
+        mRenderer.setAngleAroundZ(rotationDetector.getAngle());
+        requestRender();
     }
 }

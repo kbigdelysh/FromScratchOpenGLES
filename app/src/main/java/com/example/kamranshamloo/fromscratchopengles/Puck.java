@@ -141,6 +141,13 @@ public class Puck {
         Matrix.setIdentityM(mCurrentTranslation, 0);
     }
 
+    public Puck(float mX, float mY, float mZ) {
+        this();
+        this.mX = mX;
+        this.mY = mY;
+        this.mZ = mZ;
+    }
+
     /**
      * Encapsulates the OpenGL ES instructions for drawing this shape.
      *
