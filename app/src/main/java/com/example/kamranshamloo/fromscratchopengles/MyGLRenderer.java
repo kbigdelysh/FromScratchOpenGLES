@@ -3,6 +3,9 @@ package com.example.kamranshamloo.fromscratchopengles;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -23,7 +26,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
     //private Triangle mTriangle;
     private Square   mSquare;
     private Cube     mCube;
-    private Puck     mPuck;
+    private ArrayList<Puck> mPucks;
 
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
@@ -53,8 +56,11 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         mSquare   = new Square();
-        mCube     = new Cube();
-        mPuck     = new Puck();
+        mCube     = new Cube(); // This is the room
+        mPucks = new ArrayList<Puck>(); // listof live M2P pucks.
+
+        // Depending on how many pucks are live, set up the list of pucks to be rendered.
+        mPucks.add(new Puck());
 
         // Initialize the accumulated rotation matrix
         Matrix.setIdentityM(mAccumulatedRotation, 0);
@@ -100,6 +106,10 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         // long time = SystemClock.uptimeMillis() % 4000L;
         // float angle = 0.090f * ((int) time);
 
+//        if (SystemClock.uptimeMillis() % 400L < 100){
+//            resetView();
+//        }
+
         //Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 
         // Create global rotation matrix "mAccumulatedRotation"
@@ -115,9 +125,11 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
 
         //mSquare.draw(scratch);
         mCube.draw(mMVPMatrix, mAccumulatedRotation);
-        mPuck.draw(mMVPMatrix, mAccumulatedRotation);
-
+        for (Puck p : mPucks) {
+            p.draw(mMVPMatrix, mAccumulatedRotation);
+        }
     }
+
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
         // Adjust the viewport based on geometry changes,
@@ -184,4 +196,9 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
      * Sets the rotation angle of the triangle shape (mTriangle).
      */
     public void setAngle(float angle) {mAngle = angle;}
+
+    public void resetView(){
+        Matrix.setIdentityM(mAccumulatedRotation, 0);
+    }
+
 }
