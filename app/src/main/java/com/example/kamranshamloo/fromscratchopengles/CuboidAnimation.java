@@ -1,13 +1,18 @@
 package com.example.kamranshamloo.fromscratchopengles;
 
+import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.SystemClock;
 import android.util.Log;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Vector;
 
 /**
  * Animation that shows creation of a cuboid using OpenGL ES 2.0.
@@ -47,26 +52,28 @@ public class CuboidAnimation {
     static final int COORDS_PER_VERTEX = 3;
 
     final float[] cubeLineSegmentsPositionData =
-      {
-        -2.0f, -1.0f, -1.0f,   // left-bottom-far corner
-        -2.0f, -1.0f, -1.0f,    // moving point
-      };
+            {
+                    -2.0f, -1.0f, -1.0f,   // left-bottom-far corner
+                    -2.0f, -1.0f, -1.0f,    // moving point
+            };
 
     // Define corners of the cuboid
-    private final float[] LEFT_BOTTOM_FAR_CORNER   = {-2.0f, -1.0f, -1.0f};
-    private final float[] LEFT_BOTTOM_NEAR_CORNER  = {-2.0f, -1.0f,  1.0f};
-    private final float[] LEFT_TOP_NEAR_CORNER     = {-2.0f,  1.0f,  1.0f};
-    private final float[] LEFT_TOP_FAR_CORNER      = {-2.0f,  1.0f, -1.0f};
-    private final float[] RIGHT_BOTTOM_FAR_CORNER  = {2.0f,  -1.0f, -1.0f};
-    private final float[] RIGHT_BOTTOM_NEAR_CORNER = {2.0f,  -1.0f,  1.0f};
-    private final float[] RIGHT_TOP_NEAR_CORNER    = {2.0f,   1.0f,  1.0f};
-    private final float[] RIGHT_TOP_FAR_CORNER     = {2.0f,   1.0f, -1.0f};
+    private final Float[] LEFT_BOTTOM_FAR_CORNER   = {-2.0f, -1.0f, -1.0f};
+    private final Float[] LEFT_BOTTOM_NEAR_CORNER  = {-2.0f, -1.0f,  1.0f};
+    private final Float[] LEFT_TOP_NEAR_CORNER     = {-2.0f,  1.0f,  1.0f};
+    private final Float[] LEFT_TOP_FAR_CORNER      = {-2.0f,  1.0f, -1.0f};
+    private final Float[] RIGHT_BOTTOM_FAR_CORNER  = {2.0f,  -1.0f, -1.0f};
+    private final Float[] RIGHT_BOTTOM_NEAR_CORNER = {2.0f,  -1.0f,  1.0f};
+    private final Float[] RIGHT_TOP_NEAR_CORNER    = {2.0f,   1.0f,  1.0f};
+    private final Float[] RIGHT_TOP_FAR_CORNER     = {2.0f,   1.0f, -1.0f};
 
+    private ArrayList<Float> mPoints = new ArrayList<>();
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
     float color[] = { 1.0f, 0.709803922f, 0.898039216f, 0.5f };
     private long mPreviousTime = 0;
     private float mDeltaTime = 0;
     private float mSpeed = 1.0f;
+    private boolean mIsFrame1Finished = false;
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
@@ -106,42 +113,80 @@ public class CuboidAnimation {
 
         // Prepare the cuboid animation coordinate data
         // TODO: create step-by-step animation
+        // Calculate Pt(Pt is a point between P1 and P2)
+        //float[] vt = new float[]{};
+
+        mPoints = new ArrayList<>();
+
+        if (!mIsFrame1Finished) {
+            float ax = LEFT_BOTTOM_NEAR_CORNER[0] - LEFT_BOTTOM_FAR_CORNER[0];
+            float ay = LEFT_BOTTOM_NEAR_CORNER[1] - LEFT_BOTTOM_FAR_CORNER[1];
+            float az = LEFT_BOTTOM_NEAR_CORNER[2] - LEFT_BOTTOM_FAR_CORNER[2];
+            float[] a = new float[]{ax, ay, az};
+
+            float bx = LEFT_TOP_FAR_CORNER[0] - LEFT_TOP_NEAR_CORNER[0];
+            float by = LEFT_TOP_FAR_CORNER[1] - LEFT_TOP_NEAR_CORNER[1];
+            float bz = LEFT_TOP_FAR_CORNER[2] - LEFT_TOP_NEAR_CORNER[2];
+            float[] b = new float[]{bx, by, bz};
+
+            //float t = 1.0f;
+            //long time = SystemClock.uptimeMillis() % 4000L;
+            float currentTime = SystemClock.uptimeMillis() * 0.001f;
+            float distCovered = (currentTime - mStartTime) * mSpeed;
+            float journeyLength_ab = Matrix.length(ax, ay, az);
+            float fracJourney = distCovered / journeyLength_ab;
+            if (fracJourney > 1) {
+                fracJourney = 1;
+                mIsFrame1Finished = true;
+            }
+
+            //mDeltaTime += (currentTime - mPreviousTime) * 0.001f ; // in seconds
+            //mPreviousTime = currentTime;
+            Float[] at = new Float[]{
+                    LEFT_BOTTOM_FAR_CORNER[0] + a[0] * fracJourney,
+                    LEFT_BOTTOM_FAR_CORNER[1] + a[1] * fracJourney,
+                    LEFT_BOTTOM_FAR_CORNER[2] + a[2] * fracJourney
+            };
+            Float[] bt = new Float[]{
+                    LEFT_TOP_NEAR_CORNER[0] + b[0] * fracJourney,
+                    LEFT_TOP_NEAR_CORNER[1] + b[1] * fracJourney,
+                    LEFT_TOP_NEAR_CORNER[2] + b[2] * fracJourney
+            };
+
+            //ArrayList<Float> mPoints = new ArrayList<>();
+            //points.add(LEFT_BOTTOM_FAR_CORNER);
+            // Frame 1 (two lines)
+            mPoints.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+            mPoints.addAll(Arrays.asList(at));
+
+            mPoints.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+            mPoints.addAll(Arrays.asList(bt));
+        }
+        else
+        {
+            mPoints.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+            mPoints.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
+
+            mPoints.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+            mPoints.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
+        }
+
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
-                cubeLineSegmentsPositionData.length * 4);
+                mPoints.size() * 4);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(cubeLineSegmentsPositionData);
+        for (Float fp : mPoints) {
+            vertexBuffer.put(fp);
+        }
+        //vertexBuffer.put(cubeLineSegmentsPositionData);
         vertexBuffer.position(0);
+//        vertexBuffer.position(3);
+//        vertexBuffer.put(vt,0,3);
 
-        // Calculate Pt(Pt is a point between P1 and P2)
-        //float[] vt = new float[]{};
-        float vx = LEFT_BOTTOM_NEAR_CORNER[0] - LEFT_BOTTOM_FAR_CORNER[0];
-        float vy = LEFT_BOTTOM_NEAR_CORNER[1] - LEFT_BOTTOM_FAR_CORNER[1];
-        float vz = LEFT_BOTTOM_NEAR_CORNER[2] - LEFT_BOTTOM_FAR_CORNER[2];
-        float[] v = new float[]{vx, vy, vz};
-        //float t = 1.0f;
-        //long time = SystemClock.uptimeMillis() % 4000L;
-        float currentTime = SystemClock.uptimeMillis() * 0.001f;
-        float distCovered = (currentTime - mStartTime) * mSpeed;
-        float journeyLength = Matrix.length(vx, vy,vz);
-        float fracJourney = distCovered / journeyLength;
-        if (fracJourney > 1) fracJourney = 1;
-
-        //mDeltaTime += (currentTime - mPreviousTime) * 0.001f ; // in seconds
-        //mPreviousTime = currentTime;
-        float[] vt = new float[]{
-                LEFT_BOTTOM_FAR_CORNER[0] + v[0] * fracJourney,
-                LEFT_BOTTOM_FAR_CORNER[1] + v[1] * fracJourney,
-                LEFT_BOTTOM_FAR_CORNER[2] + v[2] * fracJourney
-        };
-        vertexBuffer.position(3);
-        vertexBuffer.put(vt,0,3);
-        //int len = vertexBuffer.limit();
-        //Log.d("buffer length", String.valueOf(len));
-        vertexBuffer.position(0);
-
+        int len = vertexBuffer.limit();
+        Log.d("buffer length", String.valueOf(len));
 
         GLES20.glVertexAttribPointer(
                 mPositionHandle, COORDS_PER_VERTEX,
@@ -166,7 +211,7 @@ public class CuboidAnimation {
 
         // Draw the cuboid
         GLES20.glLineWidth(13); // Make the edges thicker
-        GLES20.glDrawArrays(GLES20.GL_LINES, 0, cubeLineSegmentsPositionData.length/3); //36 vertexes, 6 vertex for each side
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, mPoints.size()/3); //36 vertexes, 6 vertex for each side
         //GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, cubePositionData.length/3); //36 vertexes, 6 vertex for each side
         //GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, and GL_TRIANGLES are accepted.
 
