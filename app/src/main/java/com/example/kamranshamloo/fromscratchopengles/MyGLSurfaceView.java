@@ -32,7 +32,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements RotationGestureDet
         setRenderer(mRenderer);
 
         // Render the view only when there is a change in the drawing data
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         //setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
         mRotationDetector = new RotationGestureDetector(this);

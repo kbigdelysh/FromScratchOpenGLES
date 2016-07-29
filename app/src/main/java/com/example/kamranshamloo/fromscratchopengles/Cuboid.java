@@ -8,9 +8,9 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 /**
- * A two-dimensional square for use as a drawn object in OpenGL ES 2.0.
+ * A cuboid (rectangular room) for use as a drawn object in OpenGL ES 2.0.
  */
-public class Cube {
+public class Cuboid {
 
     private final String vertexShaderCode =
             // This matrix member variable provides a hook to manipulate
@@ -160,7 +160,7 @@ final float[] cubeLineSegmentsPositionData =
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
      */
-    public Cube() {
+    public Cuboid() {
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)

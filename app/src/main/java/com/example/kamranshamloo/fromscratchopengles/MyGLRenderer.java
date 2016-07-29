@@ -4,7 +4,6 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -25,8 +24,9 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
     private static final String TAG = "MyGLRenderer";
     //private Triangle mTriangle;
     private Square   mSquare;
-    private Cube     mCube;
+    private Cuboid mCuboid;
     private ArrayList<Puck> mPucks;
+    private CuboidAnimation mCuboidAnimation;
 
     // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mMVPMatrix = new float[16];
@@ -58,8 +58,9 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         mSquare   = new Square();
-        mCube     = new Cube(); // This is the room
+        mCuboid = new Cuboid(); // This is the room
         mPucks    = new ArrayList<>(); // list of live M2P pucks.
+        mCuboidAnimation = new CuboidAnimation(); // shows the generation of the cuboid (room)
 
         // Depending on how many pucks are live, set up the list of pucks to be rendered.
         mPucks.add(new Puck());
@@ -131,11 +132,16 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
         System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
 
-        //mSquare.draw(scratch);
-        mCube.draw(mMVPMatrix, mAccumulatedRotation);
-        for (Puck p : mPucks) {
-            p.draw(mMVPMatrix, mAccumulatedRotation);
-        }
+
+        mCuboid.draw(mMVPMatrix, mAccumulatedRotation);
+
+        mCuboidAnimation.setAnimationDuration(4.0f); // in seconds
+        mCuboidAnimation.draw(mMVPMatrix, mAccumulatedRotation);
+
+
+//        for (Puck p : mPucks) {
+//            p.draw(mMVPMatrix, mAccumulatedRotation);
+//        }
     }
 
     @Override
