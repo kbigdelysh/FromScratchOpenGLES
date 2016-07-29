@@ -38,7 +38,7 @@ public class CuboidAnimation {
                     //"  gl_FragColor = vColor;" +
                     "  gl_FragColor = vColor;" +
                     "}";
-    private final float mStartTime;
+    private float mStartTime;
 
     private FloatBuffer vertexBuffer;
     //private final ShortBuffer drawListBuffer;
@@ -74,6 +74,8 @@ public class CuboidAnimation {
     private float mDeltaTime = 0;
     private float mSpeed = 1.0f;
     private boolean mIsFrame1Finished = false;
+    private boolean mIsFrame2Finished = false;
+    private float mFrame1FinishedTime = 0;
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
@@ -95,6 +97,7 @@ public class CuboidAnimation {
 
         mStartTime = SystemClock.uptimeMillis() * 0.001f; // in seconds
     }
+
     /**
      * Encapsulates the OpenGL ES instructions for drawing this shape.
      *
@@ -115,62 +118,11 @@ public class CuboidAnimation {
         // TODO: create step-by-step animation
         // Calculate Pt(Pt is a point between P1 and P2)
         //float[] vt = new float[]{};
-
         mPoints = new ArrayList<>();
-
-        if (!mIsFrame1Finished) {
-            float ax = LEFT_BOTTOM_NEAR_CORNER[0] - LEFT_BOTTOM_FAR_CORNER[0];
-            float ay = LEFT_BOTTOM_NEAR_CORNER[1] - LEFT_BOTTOM_FAR_CORNER[1];
-            float az = LEFT_BOTTOM_NEAR_CORNER[2] - LEFT_BOTTOM_FAR_CORNER[2];
-            float[] a = new float[]{ax, ay, az};
-
-            float bx = LEFT_TOP_FAR_CORNER[0] - LEFT_TOP_NEAR_CORNER[0];
-            float by = LEFT_TOP_FAR_CORNER[1] - LEFT_TOP_NEAR_CORNER[1];
-            float bz = LEFT_TOP_FAR_CORNER[2] - LEFT_TOP_NEAR_CORNER[2];
-            float[] b = new float[]{bx, by, bz};
-
-            //float t = 1.0f;
-            //long time = SystemClock.uptimeMillis() % 4000L;
-            float currentTime = SystemClock.uptimeMillis() * 0.001f;
-            float distCovered = (currentTime - mStartTime) * mSpeed;
-            float journeyLength_ab = Matrix.length(ax, ay, az);
-            float fracJourney = distCovered / journeyLength_ab;
-            if (fracJourney > 1) {
-                fracJourney = 1;
-                mIsFrame1Finished = true;
-            }
-
-            //mDeltaTime += (currentTime - mPreviousTime) * 0.001f ; // in seconds
-            //mPreviousTime = currentTime;
-            Float[] at = new Float[]{
-                    LEFT_BOTTOM_FAR_CORNER[0] + a[0] * fracJourney,
-                    LEFT_BOTTOM_FAR_CORNER[1] + a[1] * fracJourney,
-                    LEFT_BOTTOM_FAR_CORNER[2] + a[2] * fracJourney
-            };
-            Float[] bt = new Float[]{
-                    LEFT_TOP_NEAR_CORNER[0] + b[0] * fracJourney,
-                    LEFT_TOP_NEAR_CORNER[1] + b[1] * fracJourney,
-                    LEFT_TOP_NEAR_CORNER[2] + b[2] * fracJourney
-            };
-
-            //ArrayList<Float> mPoints = new ArrayList<>();
-            //points.add(LEFT_BOTTOM_FAR_CORNER);
-            // Frame 1 (two lines)
-            mPoints.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
-            mPoints.addAll(Arrays.asList(at));
-
-            mPoints.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
-            mPoints.addAll(Arrays.asList(bt));
+        mPoints.addAll(drawFrame1());
+        if (mIsFrame1Finished) {
+            mPoints.addAll(drawFrame2());
         }
-        else
-        {
-            mPoints.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
-            mPoints.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
-
-            mPoints.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
-            mPoints.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
-        }
-
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
@@ -185,8 +137,8 @@ public class CuboidAnimation {
 //        vertexBuffer.position(3);
 //        vertexBuffer.put(vt,0,3);
 
-        int len = vertexBuffer.limit();
-        Log.d("buffer length", String.valueOf(len));
+        //int len = vertexBuffer.limit();
+        //Log.d("buffer length", String.valueOf(len));
 
         GLES20.glVertexAttribPointer(
                 mPositionHandle, COORDS_PER_VERTEX,
@@ -217,6 +169,109 @@ public class CuboidAnimation {
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
+    }
+
+    private ArrayList<Float> drawFrame1() {
+        ArrayList<Float> points = new ArrayList<>();
+
+        if (!mIsFrame1Finished) {
+            float ax = LEFT_BOTTOM_NEAR_CORNER[0] - LEFT_BOTTOM_FAR_CORNER[0];
+            float ay = LEFT_BOTTOM_NEAR_CORNER[1] - LEFT_BOTTOM_FAR_CORNER[1];
+            float az = LEFT_BOTTOM_NEAR_CORNER[2] - LEFT_BOTTOM_FAR_CORNER[2];
+            float[] a = new float[]{ax, ay, az};
+
+            float bx = LEFT_TOP_FAR_CORNER[0] - LEFT_TOP_NEAR_CORNER[0];
+            float by = LEFT_TOP_FAR_CORNER[1] - LEFT_TOP_NEAR_CORNER[1];
+            float bz = LEFT_TOP_FAR_CORNER[2] - LEFT_TOP_NEAR_CORNER[2];
+            float[] b = new float[]{bx, by, bz};
+
+            float currentTime = SystemClock.uptimeMillis() * 0.001f;
+            float distCovered = (currentTime - mStartTime) * mSpeed;
+            float journeyLength_ab = Matrix.length(ax, ay, az);
+            float fracJourney = distCovered / journeyLength_ab;
+            if (fracJourney > 1) {
+                fracJourney = 1;
+                mIsFrame1Finished = true;
+                mFrame1FinishedTime = currentTime;
+            }
+            Float[] at = new Float[]{
+                    LEFT_BOTTOM_FAR_CORNER[0] + a[0] * fracJourney,
+                    LEFT_BOTTOM_FAR_CORNER[1] + a[1] * fracJourney,
+                    LEFT_BOTTOM_FAR_CORNER[2] + a[2] * fracJourney
+            };
+            Float[] bt = new Float[]{
+                    LEFT_TOP_NEAR_CORNER[0] + b[0] * fracJourney,
+                    LEFT_TOP_NEAR_CORNER[1] + b[1] * fracJourney,
+                    LEFT_TOP_NEAR_CORNER[2] + b[2] * fracJourney
+            };
+
+            // Frame 1 (two lines)
+            points.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+            points.addAll(Arrays.asList(at));
+
+            points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+            points.addAll(Arrays.asList(bt));
+        }
+        else
+        {
+            points.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+            points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
+
+            points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+            points.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
+        }
+        return points;
+    }
+
+    private ArrayList<Float> drawFrame2() {
+        ArrayList<Float> points = new ArrayList<>();
+
+        if (!mIsFrame2Finished) {
+            float cx = LEFT_TOP_NEAR_CORNER[0] - LEFT_BOTTOM_NEAR_CORNER[0];
+            float cy = LEFT_TOP_NEAR_CORNER[1] - LEFT_BOTTOM_NEAR_CORNER[1];
+            float cz = LEFT_TOP_NEAR_CORNER[2] - LEFT_BOTTOM_NEAR_CORNER[2];
+            float[] c = new float[]{cx, cy, cz};
+
+            float dx = LEFT_BOTTOM_FAR_CORNER[0] - LEFT_TOP_FAR_CORNER[0];
+            float dy = LEFT_BOTTOM_FAR_CORNER[1] - LEFT_TOP_FAR_CORNER[1];
+            float dz = LEFT_BOTTOM_FAR_CORNER[2] - LEFT_TOP_FAR_CORNER[2];
+            float[] d = new float[]{dx, dy, dz};
+
+            float currentTime = SystemClock.uptimeMillis() * 0.001f;
+            float distCovered = (currentTime - mFrame1FinishedTime) * mSpeed;
+            float journeyLength_ab = Matrix.length(cx, cy, cz);
+            float fracJourney = distCovered / journeyLength_ab;
+            if (fracJourney > 1) {
+                fracJourney = 1;
+                mIsFrame2Finished = true;
+            }
+            Float[] ct = new Float[]{
+                    LEFT_BOTTOM_NEAR_CORNER[0] + c[0] * fracJourney,
+                    LEFT_BOTTOM_NEAR_CORNER[1] + c[1] * fracJourney,
+                    LEFT_BOTTOM_NEAR_CORNER[2] + c[2] * fracJourney
+            };
+            Float[] dt = new Float[]{
+                    LEFT_TOP_FAR_CORNER[0] + d[0] * fracJourney,
+                    LEFT_TOP_FAR_CORNER[1] + d[1] * fracJourney,
+                    LEFT_TOP_FAR_CORNER[2] + d[2] * fracJourney
+            };
+
+            // Frame 2 (two lines)
+            points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
+            points.addAll(Arrays.asList(ct));
+
+            points.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
+            points.addAll(Arrays.asList(dt));
+        }
+        else
+        {
+            points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
+            points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+
+            points.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
+            points.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+        }
+        return points;
     }
 
     public float getAnimationDuration() {
