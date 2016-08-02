@@ -49,7 +49,7 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
 
 
     private volatile float mAngleAroundZ = 0.0f;
-    public volatile float mDeltaX = 0.0f;
+    public volatile float mDeltaX = -45.0f; // Initial angle (looks good for animation).
     public volatile float mDeltaY = 0.0f;
 
     @Override
@@ -133,10 +133,15 @@ public class MyGLRenderer implements MyGLSurfaceView.Renderer{
         System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
 
 
-        mCuboid.draw(mMVPMatrix, mAccumulatedRotation);
+        if (mCuboidAnimation.isAnimationFinished()) {
+            mCuboid.draw(mMVPMatrix, mAccumulatedRotation);
+        }
+        else {
+            //mCuboidAnimation.setAnimationDuration(4.0f); // in seconds
+            mCuboidAnimation.draw(mMVPMatrix, mAccumulatedRotation);
+        }
 
-        mCuboidAnimation.setAnimationDuration(4.0f); // in seconds
-        mCuboidAnimation.draw(mMVPMatrix, mAccumulatedRotation);
+
 
 
 //        for (Puck p : mPucks) {

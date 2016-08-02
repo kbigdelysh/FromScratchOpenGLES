@@ -69,13 +69,16 @@ public class CuboidAnimation {
 
     private ArrayList<Float> mPoints = new ArrayList<>();
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-    float color[] = { 1.0f, 0.709803922f, 0.898039216f, 0.5f };
-    private long mPreviousTime = 0;
-    private float mDeltaTime = 0;
-    private float mSpeed = 1.0f;
+    float color[] = { 0.2f, 0.709803922f, 0.898039216f, 0.5f};
+//    private long mPreviousTime = 0;
+//    private float mDeltaTime = 0;
+    private float mSpeed = 3.0f;
     private boolean mIsFrame1Finished = false;
     private boolean mIsFrame2Finished = false;
     private float mFrame1FinishedTime = 0;
+    private float mFrame2FinishedTime = 0;
+    private boolean mIsFrame3Finished = false;
+    private boolean mIsAnimationFinished = false;
 
     /**
      * Sets up the drawing object data for use in an OpenGL ES context.
@@ -123,6 +126,9 @@ public class CuboidAnimation {
         if (mIsFrame1Finished) {
             mPoints.addAll(drawFrame2());
         }
+        if (mIsFrame2Finished){
+            mPoints.addAll(drawFrame3());
+        }
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 4 bytes per float)
@@ -162,7 +168,7 @@ public class CuboidAnimation {
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
         // Draw the cuboid
-        GLES20.glLineWidth(13); // Make the edges thicker
+        GLES20.glLineWidth(8); // Make the edges thicker
         GLES20.glDrawArrays(GLES20.GL_LINES, 0, mPoints.size()/3); //36 vertexes, 6 vertex for each side
         //GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, cubePositionData.length/3); //36 vertexes, 6 vertex for each side
         //GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, and GL_TRIANGLES are accepted.
@@ -212,8 +218,9 @@ public class CuboidAnimation {
             points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
             points.addAll(Arrays.asList(bt));
         }
-        else
+        else // Frame1 is already finished. No need for calculation, just draw it
         {
+            // Frame 1 (two lines)
             points.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
             points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
 
@@ -244,6 +251,7 @@ public class CuboidAnimation {
             if (fracJourney > 1) {
                 fracJourney = 1;
                 mIsFrame2Finished = true;
+                mFrame2FinishedTime = currentTime;
             }
             Float[] ct = new Float[]{
                     LEFT_BOTTOM_NEAR_CORNER[0] + c[0] * fracJourney,
@@ -263,8 +271,9 @@ public class CuboidAnimation {
             points.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
             points.addAll(Arrays.asList(dt));
         }
-        else
+        else // Frame 2 is already finished. No need for calculation, just draw it
         {
+            // Frame 2 (two lines)
             points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
             points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
 
@@ -273,12 +282,134 @@ public class CuboidAnimation {
         }
         return points;
     }
+    private ArrayList<Float> drawFrame3() {
+        ArrayList<Float> points = new ArrayList<>();
 
+        if (!mIsFrame3Finished) {
+            float mx = RIGHT_BOTTOM_FAR_CORNER[0] - LEFT_BOTTOM_FAR_CORNER[0];
+            float my = RIGHT_BOTTOM_FAR_CORNER[1] - LEFT_BOTTOM_FAR_CORNER[1];
+            float mz = RIGHT_BOTTOM_FAR_CORNER[2] - LEFT_BOTTOM_FAR_CORNER[2];
+            float[] m = new float[]{mx, my, mz};
+
+            float nx = RIGHT_BOTTOM_NEAR_CORNER[0] - LEFT_BOTTOM_NEAR_CORNER[0];
+            float ny = RIGHT_BOTTOM_NEAR_CORNER[1] - LEFT_BOTTOM_NEAR_CORNER[1];
+            float nz = RIGHT_BOTTOM_NEAR_CORNER[2] - LEFT_BOTTOM_NEAR_CORNER[2];
+            float[] n = new float[]{nx, ny, nz};
+
+            float ox = RIGHT_TOP_NEAR_CORNER[0] - LEFT_TOP_NEAR_CORNER[0];
+            float oy = RIGHT_TOP_NEAR_CORNER[1] - LEFT_TOP_NEAR_CORNER[1];
+            float oz = RIGHT_TOP_NEAR_CORNER[2] - LEFT_TOP_NEAR_CORNER[2];
+            float[] o = new float[]{ox, oy, oz};
+
+            float px = RIGHT_TOP_FAR_CORNER[0] - LEFT_TOP_FAR_CORNER[0];
+            float py = RIGHT_TOP_FAR_CORNER[1] - LEFT_TOP_FAR_CORNER[1];
+            float pz = RIGHT_TOP_FAR_CORNER[2] - LEFT_TOP_FAR_CORNER[2];
+            float[] p = new float[]{px, py, pz};
+
+            float currentTime = SystemClock.uptimeMillis() * 0.001f;
+            float distCovered = (currentTime - mFrame2FinishedTime) * mSpeed;
+            float journeyLength_ab = Matrix.length(mx, my, mz);
+            float fracJourney = distCovered / journeyLength_ab;
+            if (fracJourney > 1) {
+                fracJourney = 1;
+                mIsFrame3Finished = true;
+                mIsAnimationFinished = true;
+            }
+            Float[] mt = new Float[]{
+                    LEFT_BOTTOM_FAR_CORNER[0] + m[0] * fracJourney,
+                    LEFT_BOTTOM_FAR_CORNER[1] + m[1] * fracJourney,
+                    LEFT_BOTTOM_FAR_CORNER[2] + m[2] * fracJourney
+            };
+            Float[] nt = new Float[]{
+                    LEFT_BOTTOM_NEAR_CORNER[0] + n[0] * fracJourney,
+                    LEFT_BOTTOM_NEAR_CORNER[1] + n[1] * fracJourney,
+                    LEFT_BOTTOM_NEAR_CORNER[2] + n[2] * fracJourney
+            };
+            Float[] ot = new Float[]{
+                    LEFT_TOP_NEAR_CORNER[0] + o[0] * fracJourney,
+                    LEFT_TOP_NEAR_CORNER[1] + o[1] * fracJourney,
+                    LEFT_TOP_NEAR_CORNER[2] + o[2] * fracJourney
+            };
+            Float[] pt = new Float[]{
+                    LEFT_TOP_FAR_CORNER[0] + p[0] * fracJourney,
+                    LEFT_TOP_FAR_CORNER[1] + p[1] * fracJourney,
+                    LEFT_TOP_FAR_CORNER[2] + p[2] * fracJourney
+            };
+
+            // Frame 3 (four lines)
+            // m
+            points.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+            points.addAll(Arrays.asList(mt));
+
+            // n
+            points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
+            points.addAll(Arrays.asList(nt));
+
+            // o
+            points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+            points.addAll(Arrays.asList(ot));
+
+            // p
+            points.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
+            points.addAll(Arrays.asList(pt));
+
+            // ---- moving square-----
+            points.addAll(Arrays.asList(mt));
+            points.addAll(Arrays.asList(nt));
+
+            points.addAll(Arrays.asList(nt));
+            points.addAll(Arrays.asList(ot));
+
+            points.addAll(Arrays.asList(ot));
+            points.addAll(Arrays.asList(pt));
+
+            points.addAll(Arrays.asList(pt));
+            points.addAll(Arrays.asList(mt));
+
+        }
+        else // Frame 3 is already finished. No need for calculation, just draw it
+        {
+            // Frame 3 (four lines)
+            // m
+            points.addAll(Arrays.asList(LEFT_BOTTOM_FAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_BOTTOM_FAR_CORNER));
+
+            // n
+            points.addAll(Arrays.asList(LEFT_BOTTOM_NEAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_BOTTOM_NEAR_CORNER));
+
+            // o
+            points.addAll(Arrays.asList(LEFT_TOP_NEAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_TOP_NEAR_CORNER));
+
+            // p
+            points.addAll(Arrays.asList(LEFT_TOP_FAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_TOP_FAR_CORNER));
+
+            // ----RIGHT square-----
+            points.addAll(Arrays.asList(RIGHT_BOTTOM_FAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_BOTTOM_NEAR_CORNER));
+
+            points.addAll(Arrays.asList(RIGHT_BOTTOM_NEAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_TOP_NEAR_CORNER));
+
+            points.addAll(Arrays.asList(RIGHT_TOP_NEAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_TOP_FAR_CORNER));
+
+            points.addAll(Arrays.asList(RIGHT_TOP_FAR_CORNER));
+            points.addAll(Arrays.asList(RIGHT_BOTTOM_FAR_CORNER));
+        }
+        return points;
+    }
     public float getAnimationDuration() {
         return mAnimationDuration;
     }
 
     public void setAnimationDuration(float animationDuration) {
         this.mAnimationDuration = animationDuration;
+    }
+
+    public boolean isAnimationFinished() {
+        return mIsAnimationFinished;
     }
 }
